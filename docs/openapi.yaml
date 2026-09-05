@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: Employee Management API
+  version: "1.0.0"
+  description: >
+    API for managing employees within an Employee Management System.
+    Supports viewing, creating, updating, deleting, searching, and
+    filtering employee records.
+servers:
+  - url: http://127.0.0.1:8000/api/v1
+tags:
+  - name: Employees
+paths:
+  /employees:
+    get:
+      tags: [Employees]
+      summary: View all employees
+      description: Retrieves a list of all employees. Supports optional search and department filtering via query parameters.
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Search employees by name
+          schema:
+            type: string
+          example: juan
+        - name: department
+          in: query
+          required: false
+          description: Filter employees by department
+          schema:
+            type: string
+          example: IT
+      responses:
+        "200":
+          description: A list of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employee"
+    post:
+      tags: [Employees]
+      summary: Add an employee
+      description: Creates a new employee record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeInput"
+      responses:
+        "201":
+          description: Employee created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "422":
+          description: Validation error
+  /employees/{id}:
+    get:
+      tags: [Employees]
+      summary: View one employee
+      parameters:
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Employee found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "404":
+          description: Employee not found
+    put:
+      tags: [Employees]
+      summary: Update employee information
+      parameters:
+        - $ref: "#/components/parameters/EmployeeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeInput"
+      responses:
+        "200":
+          description: Employee updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "404":
+          description: Employee not found
+        "422":
+          description: Validation error
+    delete:
+      tags: [Employees]
+      summary: Delete an employee
+      parameters:
+        - $ref: "#/components/parameters/EmployeeId"
+      responses:
+        "200":
+          description: Employee deleted successfully
+        "404":
+          description: Employee not found
+components:
+  parameters:
+    EmployeeId:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of the employee
+      schema:
+        type: integer
+      example: 1
+  schemas:
+    EmployeeInput:
+      type: object
+      required: [first_name, last_name, email, department, position]
+      properties:
+        first_name:
+          type: string
+          example: Juan
+        last_name:
+          type: string
+          example: Dela Cruz
+        email:
+          type: string
+          format: email
+          example: juan@example.com
+        department:
+          type: string
+          example: IT
+        position:
+          type: string
+          example: Programmer
+    Employee:
+      allOf:
+        - $ref: "#/components/schemas/EmployeeInput"
+        - type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            created_at:
+              type: string
+              format: date-time
+              example: "2026-08-04T10:00:00Z"
