@@ -8,9 +8,24 @@ use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Employee::all());
+        $query = Employee::with('department');
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+
+        return response()->json($query->paginate(10));
     }
 
     public function store(Request $request)
@@ -21,6 +36,7 @@ class EmployeeController extends Controller
             'email' => 'required|email|unique:employees,email',
             'department' => 'required|string|max:100',
             'position' => 'required|string|max:100',
+            'department_id' => 'nullable|exists:departments,id',
         ]);
 
         $employee = Employee::create($validated);
@@ -53,6 +69,7 @@ class EmployeeController extends Controller
             'email' => 'sometimes|email|unique:employees,email,' . $id,
             'department' => 'sometimes|string|max:100',
             'position' => 'sometimes|string|max:100',
+            'department_id' => 'sometimes|nullable|exists:departments,id',
         ]);
 
         $employee->update($validated);
